@@ -677,12 +677,6 @@
             })
             .join('');
 
-        const win = window.open('', '_blank', 'width=960,height=800');
-        if (!win) {
-            showToast('Popup blocked. Please allow popups to download PDF');
-            return;
-        }
-
         const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -839,13 +833,51 @@
     </div>
 </body>
 </html>`;
+        const existingFrame = document.getElementById('tcPrintFrame');
+        if (existingFrame) existingFrame.remove();
 
-        win.document.open();
-        win.document.write(html);
-        win.document.close();
-        win.focus();
-        showToast('Professional PDF view ready. Select Save as PDF');
-        setTimeout(() => win.print(), 350);
+        const printFrame = document.createElement('iframe');
+        printFrame.id = 'tcPrintFrame';
+        printFrame.setAttribute('title', 'Tax report print frame');
+        printFrame.style.position = 'fixed';
+        printFrame.style.right = '0';
+        printFrame.style.bottom = '0';
+        printFrame.style.width = '0';
+        printFrame.style.height = '0';
+        printFrame.style.border = '0';
+        printFrame.style.visibility = 'hidden';
+        document.body.appendChild(printFrame);
+
+        printFrame.onload = function() {
+            const frameWindow = printFrame.contentWindow;
+            if (!frameWindow) {
+                showToast('Unable to prepare PDF view');
+                printFrame.remove();
+                return;
+            }
+
+            const cleanup = () => {
+                setTimeout(() => {
+                    if (document.getElementById('tcPrintFrame')) {
+                        printFrame.remove();
+                    }
+                }, 300);
+            };
+
+            frameWindow.onafterprint = cleanup;
+            frameWindow.focus();
+            showToast('Professional PDF view ready. Select Save as PDF');
+            setTimeout(() => {
+                try {
+                    frameWindow.print();
+                } finally {
+                    // Fallback cleanup for browsers that do not fire onafterprint.
+                    setTimeout(cleanup, 4000);
+                }
+            }, 150);
+        };
+
+        printFrame.srcdoc = html;
     }
 
     // ============================
