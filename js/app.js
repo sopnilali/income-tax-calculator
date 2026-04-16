@@ -664,17 +664,34 @@
         const locationLabel = lastResult.location && lastResult.location.state ? lastResult.location.state : 'Unknown';
 
         const breakdownRows = lastResult.bracketBreakdown
-            .filter(b => b.incomeInBracket > 0 || b.tax > 0)
             .map(b => {
                 const range = b.max ? `${fmt(b.min)} - ${fmt(b.max)}` : `${fmt(b.min)}+`;
                 return `<tr>
                     <td>${range}</td>
+                    <td>Federal</td>
                     <td>${(b.rate * 100).toFixed(0)}%</td>
-                    <td style="text-align:right;">${fmt(b.incomeInBracket)}</td>
-                    <td style="text-align:right;">${fmt(b.tax)}</td>
+                    <td style="text-align:right;">${b.incomeInBracket > 0 ? fmt(b.incomeInBracket) : '—'}</td>
+                    <td style="text-align:right;">${b.tax > 0 ? fmt(b.tax) : '—'}</td>
                 </tr>`;
             })
             .join('');
+        const detailedRows = `
+                <tr><th>Annual Salary / Wages</th><td style="text-align:right;">${fmt(lastResult.grossIncome)}</td></tr>
+                <tr><th>Total Gross Income</th><td style="text-align:right;">${fmt(lastResult.grossIncome)}</td></tr>
+                <tr><th>Retirement Contributions (401k)</th><td style="text-align:right;">- ${fmt(lastResult.cappedRetirement)}</td></tr>
+                <tr><th>Other Adjustments</th><td style="text-align:right;">- ${fmt(lastResult.adjustments)}</td></tr>
+                <tr><th>Itemized Deductions</th><td style="text-align:right;">- ${fmt(lastResult.deductionAmount)}</td></tr>
+                <tr><th>Total Deductions</th><td style="text-align:right;">- ${fmt(lastResult.totalDeductions)}</td></tr>
+                <tr><th>Taxable Income</th><td style="text-align:right;">${fmt(lastResult.taxableIncome)}</td></tr>
+                <tr><th>Federal Income Tax (before credits)</th><td style="text-align:right;">${fmt(lastResult.totalTaxBeforeCredits)}</td></tr>
+                <tr><th>Tax Credits (manual)</th><td style="text-align:right;">- ${fmt(lastResult.credits)}</td></tr>
+                <tr><th>Child Tax Credits (${lastResult.dependents} dependent${lastResult.dependents !== 1 ? 's' : ''})</th><td style="text-align:right;">- ${fmt(lastResult.dependentCredits)}</td></tr>
+                <tr><th>Total Credits Applied</th><td style="text-align:right;">- ${fmt(lastResult.totalCredits)}</td></tr>
+                <tr><th>Final Tax Liability</th><td style="text-align:right;">${fmt(lastResult.finalTax)}</td></tr>
+                <tr><th>Net Annual Income</th><td style="text-align:right;">${fmt(lastResult.netIncome)}</td></tr>
+                <tr><th>Deduction Savings (Estimated)</th><td style="text-align:right;">${fmt(lastResult.deductionSavings)}</td></tr>
+                <tr><th>Monthly Take-Home</th><td style="text-align:right;">${fmt(monthly(lastResult.netIncome))}</td></tr>
+        `;
 
         const html = `<!DOCTYPE html>
 <html lang="en">
@@ -805,6 +822,7 @@
             <thead>
                 <tr>
                     <th>Bracket Range</th>
+                    <th>Tax Type</th>
                     <th>Rate</th>
                     <th style="text-align:right;">Taxable in Bracket</th>
                     <th style="text-align:right;">Tax Amount</th>
@@ -818,10 +836,7 @@
         <h2 class="section-title">Detailed Figures</h2>
         <table>
             <tbody>
-                <tr><th>Total Deductions</th><td style="text-align:right;">${fmt(lastResult.totalDeductions)}</td></tr>
-                <tr><th>Total Credits</th><td style="text-align:right;">${fmt(lastResult.totalCredits)}</td></tr>
-                <tr><th>Deduction Savings (Estimated)</th><td style="text-align:right;">${fmt(lastResult.deductionSavings)}</td></tr>
-                <tr><th>Monthly Take-Home</th><td style="text-align:right;">${fmt(monthly(lastResult.netIncome))}</td></tr>
+                ${detailedRows}
             </tbody>
         </table>
 
