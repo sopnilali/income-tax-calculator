@@ -647,7 +647,6 @@
             showToast('Please calculate tax first');
             return;
         }
-
         const statusMap = {
             single: 'Single',
             mfj: 'Married Filing Jointly',
@@ -833,6 +832,7 @@
     </div>
 </body>
 </html>`;
+
         const existingFrame = document.getElementById('tcPrintFrame');
         if (existingFrame) existingFrame.remove();
 
@@ -871,7 +871,6 @@
                 try {
                     frameWindow.print();
                 } finally {
-                    // Fallback cleanup for browsers that do not fire onafterprint.
                     setTimeout(cleanup, 4000);
                 }
             }, 150);
