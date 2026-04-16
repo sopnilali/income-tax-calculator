@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U.S. Income Tax Calculator — Instant & Accurate Estimates</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Background Decorations -->
+<div class="tc-bg-decor">
+    <div class="tc-orb tc-orb-1"></div>
+    <div class="tc-orb tc-orb-2"></div>
+    <div class="tc-orb tc-orb-3"></div>
+</div>
+
+<!-- Toast Notification -->
+<div class="tc-toast" id="tcToast">
+    <i class='bx bx-check-circle'></i>
+    <span id="tcToastMsg">Saved successfully</span>
+</div>
+
+<div class="tc-main">
+    <!-- Header -->
+    <header class="tc-header" data-aos="fade-down" data-aos-duration="600">
+        <h1>U.S. <span>Income Tax</span> Calculator</h1>
+        <p>Enter a ZIP code to see your state on the map and get accurate state and local tax (e.g. NYC).</p>
+        <div class="tc-trust-badges">
+            <span class="tc-trust-badge"><i class='bx bx-check-shield'></i> Accurate</span>
+            <span class="tc-trust-badge"><i class='bx bx-bolt-circle'></i> Instant</span>
+            <span class="tc-trust-badge"><i class='bx bx-lock-alt'></i> Private</span>
+            <span class="tc-trust-badge"><i class='bx bx-star'></i> Free</span>
+        </div>
+    </header>
+
+    <!-- Input Form Card -->
+    <div class="tc-card tc-form-card" data-aos="fade-up" data-aos-duration="600" data-aos-delay="100">
+        <div class="tc-form-header">
+            <div class="tc-icon-wrap"><i class='bx bx-calculator'></i></div>
+            <div>
+                <h2>Tax Details</h2>
+                <p>Enter a ZIP code to see your state on the map and get accurate state and local tax (e.g. NYC).</p>
+            </div>
+        </div>
+        <div class="tc-form-body">
+            <div class="row">
+                <!-- Tax Year -->
+                <div class="col-md-6">
+                    <div class="tc-field-group">
+                        <label>Tax Year <span class="tc-required">*</span></label>
+                        <input type="number" class="form-control" id="tcTaxYear" min="1900" max="2100" step="1" inputmode="numeric" placeholder="2026">
+                        <div class="tc-hint">Enter tax year (latest rates used when exact year is unavailable)</div>
+                    </div>
+                </div>
+                <!-- ZIP Code -->
+                <div class="col-md-6">
+                    <div class="tc-field-group" id="tcZipGroup">
+                        <label>ZIP Code <span class="tc-required">*</span></label>
+                        <input type="text" class="form-control" id="tcZipCode" placeholder="10001" inputmode="numeric" maxlength="5">
+                        <div class="tc-hint" id="tcZipStateHint" hidden>State: —</div>
+                        <div class="tc-error">Please enter a valid 5-digit ZIP code</div>
+                    </div>
+                </div>
+                <!-- Filing Status -->
+                <div class="col-md-6">
+                    <div class="tc-field-group">
+                        <label>Filing Status <span class="tc-required">*</span></label>
+                        <select class="form-select" id="tcFilingStatus">
+                            <option value="single">Single</option>
+                            <option value="mfj">Married Filing Jointly</option>
+                            <option value="mfs">Married Filing Separately</option>
+                            <option value="hoh">Head of Household</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Annual Income -->
+                <div class="col-md-6">
+                    <div class="tc-field-group" id="tcIncomeGroup">
+                        <label>Annual Salary / Wages <span class="tc-required">*</span></label>
+                        <div class="tc-input-wrap">
+                            <span class="tc-input-prefix">$</span>
+                            <input type="text" class="form-control" id="tcIncome" placeholder="75,000" inputmode="decimal">
+                        </div>
+                        <div class="tc-error">Please enter a valid annual income</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Options -->
+            <button type="button" class="tc-advanced-toggle" id="tcAdvToggle">
+                <i class='bx bx-chevron-down'></i>
+                <span>Show Advanced Options</span>
+            </button>
+            <div class="tc-advanced-body" id="tcAdvBody">
+                <div class="tc-advanced-inner">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="tc-field-group" id="tcDeductionGroup">
+                                <label>Itemized Deductions</label>
+                                <div class="tc-input-wrap">
+                                    <span class="tc-input-prefix">$</span>
+                                    <input type="text" class="form-control" id="tcDeductions" placeholder="0" inputmode="decimal">
+                                </div>
+                                <div class="tc-hint">Mortgage interest, state taxes, charitable giving</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="tc-field-group">
+                                <label>Tax Credits</label>
+                                <div class="tc-input-wrap">
+                                    <span class="tc-input-prefix">$</span>
+                                    <input type="text" class="form-control" id="tcCredits" placeholder="0" inputmode="decimal">
+                                </div>
+                                <div class="tc-hint">Child tax credits handled automatically via dependents</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="tc-field-group">
+                                <label>Retirement (401k)</label>
+                                <div class="tc-input-wrap">
+                                    <span class="tc-input-prefix">$</span>
+                                    <input type="text" class="form-control" id="tcRetirement" placeholder="0" inputmode="decimal">
+                                </div>
+                                <div class="tc-hint" id="tcRetHint">Limit: $23,000 for 2024</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="tc-field-group">
+                                <label>Dependents</label>
+                                <input type="number" class="form-control" id="tcDependents" placeholder="0" min="0" max="20" value="0">
+                                <div class="tc-hint">$2,000 credit per dependent</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="tc-field-group">
+                                <label>Other Adjustments</label>
+                                <div class="tc-input-wrap">
+                                    <span class="tc-input-prefix">$</span>
+                                    <input type="text" class="form-control" id="tcAdjustments" placeholder="0" inputmode="decimal">
+                                </div>
+                                <div class="tc-hint">HSA, student loan interest, etc.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desktop Buttons -->
+            <div class="tc-form-actions">
+                <button type="button" class="tc-btn-primary" id="tcCalcBtn" onclick="calculateTax()">
+                    <i class='bx bx-calculator'></i> Calculate Tax
+                </button>
+                <button type="button" class="tc-btn-reset" onclick="resetForm()">
+                    <i class='bx bx-refresh'></i> Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="tc-results" id="tcResults">
+        <!-- Section Title -->
+        <div class="tc-section-title" data-aos="fade-up">
+            <i class='bx bx-bar-chart-alt-2'></i>
+            <span>Your Tax Estimate</span>
+            <span class="tc-line"></span>
+        </div>
+        <div class="tc-results-topbar" data-aos="fade-up" data-aos-delay="50">
+            <div class="tc-season-note" id="tcSeasonNote">Result - Filing season</div>
+            <div class="tc-view-toggle">
+                <button class="active" onclick="setView('yearly', this)">Yearly</button>
+                <button onclick="setView('monthly', this)">Monthly</button>
+            </div>
+        </div>
+
+        <!-- Summary Cards Row 1 -->
+        <div class="tc-summary-grid" data-aos="fade-up" data-aos-delay="100">
+            <div class="tc-summary-card sc-gross">
+                <div class="tc-sc-label"><i class='bx bx-dollar-circle'></i> Gross Income</div>
+                <div class="tc-sc-value clr-primary" id="tcResGross">$0</div>
+                <div class="tc-sc-sub" id="tcResGrossSub">$0 /month</div>
+            </div>
+            <div class="tc-summary-card sc-taxable">
+                <div class="tc-sc-label"><i class='bx bx-receipt'></i> Taxable Income</div>
+                <div class="tc-sc-value clr-secondary" id="tcResTaxable">$0</div>
+                <div class="tc-sc-sub" id="tcResTaxableSub">$0 /month</div>
+            </div>
+            <div class="tc-summary-card sc-tax">
+                <div class="tc-sc-label"><i class='bx bx-minus-circle'></i> Total Tax</div>
+                <div class="tc-sc-value clr-danger" id="tcResTax">$0</div>
+                <div class="tc-sc-sub" id="tcResTaxSub">$0 /month</div>
+            </div>
+            <div class="tc-summary-card sc-net">
+                <div class="tc-sc-label"><i class='bx bx-wallet'></i> Net Income</div>
+                <div class="tc-sc-value clr-success" id="tcResNet">$0</div>
+                <div class="tc-sc-sub" id="tcResNetSub">$0 /month</div>
+            </div>
+        </div>
+
+        <!-- Summary Cards Row 2 -->
+        <div class="tc-summary-grid" data-aos="fade-up" data-aos-delay="150">
+            <div class="tc-summary-card sc-rate">
+                <div class="tc-sc-label"><i class='bx bx-pie-chart'></i> Effective Rate</div>
+                <div class="tc-sc-value clr-warning" id="tcResRate">0%</div>
+                <div class="tc-sc-sub">Average tax rate</div>
+            </div>
+            <div class="tc-summary-card sc-monthly">
+                <div class="tc-sc-label" id="tcResTakeHomeLabel"><i class='bx bx-calendar'></i> Monthly Take-Home</div>
+                <div class="tc-sc-value" id="tcResMonthly" style="color:#6366f1;">$0</div>
+                <div class="tc-sc-sub">After federal tax</div>
+            </div>
+            <div class="tc-summary-card sc-burden">
+                <div class="tc-sc-label"><i class='bx bx-trending-down'></i> Tax Burden</div>
+                <div class="tc-sc-value" id="tcResBurden" style="color:#ec4899;">0%</div>
+                <div class="tc-sc-sub">Of gross income</div>
+            </div>
+            <div class="tc-summary-card sc-savings">
+                <div class="tc-sc-label"><i class='bx bx-save'></i> Deduction Savings</div>
+                <div class="tc-sc-value" id="tcResSavings" style="color:#14b8a6;">$0</div>
+                <div class="tc-sc-sub" id="tcResSavingsSub">Tax saved by deductions</div>
+            </div>
+        </div>
+
+        <!-- Highlight Box -->
+        <div class="tc-highlight" data-aos="fade-up" data-aos-delay="200">
+            <div class="tc-highlight-grid">
+                <div class="tc-highlight-item">
+                    <span class="tc-hl-icon"><i class='bx bx-receipt'></i></span>
+                    <div class="tc-hl-label">Estimated Tax Payable</div>
+                    <div class="tc-hl-value" id="tcHlTax">$0</div>
+                    <div class="tc-hl-sub" id="tcHlTaxScope"> Tax Type: Federal</div>
+                </div>
+                <div class="tc-highlight-item">
+                    <span class="tc-hl-icon"><i class='bx bx-wallet'></i></span>
+                    <div class="tc-hl-label">Net Annual Income</div>
+                    <div class="tc-hl-value" id="tcHlNet">$0</div>
+                    <div class="tc-hl-sub" id="tcHlNetSub">$0 per month</div>
+                </div>
+                <div class="tc-highlight-item">
+                    <span class="tc-hl-icon"><i class='bx bx-trending-up'></i></span>
+                    <div class="tc-hl-label">Marginal Tax Rate</div>
+                    <div class="tc-hl-value" id="tcHlMarginal">0%</div>
+                    <div class="tc-hl-sub">Highest bracket applied</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tc-state-map-card" data-aos="fade-up" data-aos-delay="230">
+            <div class="tc-state-map-head">
+                <h3><i class='bx bx-map'></i> Location & State Map</h3>
+                <span class="tc-state-pill" id="tcStatePill">State: —</span>
+            </div>
+            <iframe
+                id="tcStateMap"
+                class="tc-state-map-frame"
+                title="State map"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                src="https://www.google.com/maps?q=United%20States&output=embed">
+            </iframe>
+        </div>
+
+        <!-- Charts -->
+        <div class="tc-charts-grid" data-aos="fade-up" data-aos-delay="250">
+            <div class="tc-chart-card">
+                <h3><i class='bx bx-doughnut-chart'></i> Tax by Bracket</h3>
+                <div class="tc-chart-wrap">
+                    <canvas id="tcChartBracket"></canvas>
+                </div>
+            </div>
+            <div class="tc-chart-card">
+                <h3><i class='bx bx-bar-chart-alt'></i> Income Allocation</h3>
+                <div class="tc-chart-wrap">
+                    <canvas id="tcChartAllocation"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tax Bracket Table -->
+        <div class="tc-table-card" data-aos="fade-up" data-aos-delay="300">
+            <h3><i class='bx bx-list-ul'></i> Tax Bracket Breakdown</h3>
+            <div style="overflow-x:auto;">
+                <table class="tc-table" id="tcBracketTable">
+                    <thead>
+                        <tr>
+                            <th>Bracket</th>
+                            <th>Tax Type</th>
+                            <th>Rate</th>
+                            <th>Income in Bracket</th>
+                            <th class="text-right">Tax Amount</th>
+                            <th style="min-width:100px;">Fill</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tcBracketBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Detailed Breakdown Table -->
+        <div class="tc-table-card" data-aos="fade-up" data-aos-delay="350">
+            <h3><i class='bx bx-file-text'></i> Detailed Breakdown</h3>
+            <div style="overflow-x:auto;">
+                <table class="tc-table" id="tcDetailTable">
+                    <tbody id="tcDetailBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Mobile Sticky Button -->
+<div class="tc-mobile-sticky">
+    <button class="tc-btn-primary" onclick="calculateTax()">
+        <i class='bx bx-calculator'></i> Calculate Tax
+    </button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
