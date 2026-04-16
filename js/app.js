@@ -643,7 +643,209 @@
     // Download Summary
     // ============================
     function downloadSummary() {
-        window.print();
+        if (!lastResult) {
+            showToast('Please calculate tax first');
+            return;
+        }
+
+        const statusMap = {
+            single: 'Single',
+            mfj: 'Married Filing Jointly',
+            mfs: 'Married Filing Separately',
+            hoh: 'Head of Household'
+        };
+        const reportDate = new Date().toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        const filingStatusLabel = statusMap[lastResult.status] || lastResult.status;
+        const locationLabel = lastResult.location && lastResult.location.state ? lastResult.location.state : 'Unknown';
+
+        const breakdownRows = lastResult.bracketBreakdown
+            .filter(b => b.incomeInBracket > 0 || b.tax > 0)
+            .map(b => {
+                const range = b.max ? `${fmt(b.min)} - ${fmt(b.max)}` : `${fmt(b.min)}+`;
+                return `<tr>
+                    <td>${range}</td>
+                    <td>${(b.rate * 100).toFixed(0)}%</td>
+                    <td style="text-align:right;">${fmt(b.incomeInBracket)}</td>
+                    <td style="text-align:right;">${fmt(b.tax)}</td>
+                </tr>`;
+            })
+            .join('');
+
+        const win = window.open('', '_blank', 'width=960,height=800');
+        if (!win) {
+            showToast('Popup blocked. Please allow popups to download PDF');
+            return;
+        }
+
+        const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tax Report</title>
+    <style>
+        @page { size: A4; margin: 16mm; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #1f2937;
+            background: #ffffff;
+        }
+        .report {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .header {
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 12px;
+            margin-bottom: 18px;
+        }
+        .title {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 700;
+            color: #285A48;
+        }
+        .subtitle {
+            margin: 6px 0 0;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .meta {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px 16px;
+            font-size: 12px;
+        }
+        .meta div { padding: 6px 8px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px; }
+        .section-title {
+            margin: 20px 0 10px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #111827;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+        .kpi {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+        .kpi .label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+        .kpi .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111827;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 12px;
+        }
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 8px 10px;
+        }
+        th {
+            background: #f3f4f6;
+            text-align: left;
+            font-weight: 700;
+        }
+        .note {
+            margin-top: 16px;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-left: 4px solid #285A48;
+            border-radius: 6px;
+            background: #f9fafb;
+            font-size: 11px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="report">
+        <div class="header">
+            <h1 class="title">U.S. Income Tax Report</h1>
+            <p class="subtitle">Generated on ${reportDate}</p>
+            <div class="meta">
+                <div><strong>Tax Year:</strong> ${lastResult.year}</div>
+                <div><strong>Filing Status:</strong> ${filingStatusLabel}</div>
+                <div><strong>ZIP Code:</strong> ${lastResult.zipCode}</div>
+                <div><strong>State:</strong> ${locationLabel}</div>
+            </div>
+        </div>
+
+        <h2 class="section-title">Summary</h2>
+        <div class="kpi-grid">
+            <div class="kpi"><span class="label">Gross Income</span><span class="value">${fmt(lastResult.grossIncome)}</span></div>
+            <div class="kpi"><span class="label">Taxable Income</span><span class="value">${fmt(lastResult.taxableIncome)}</span></div>
+            <div class="kpi"><span class="label">Federal Tax Liability</span><span class="value">${fmt(lastResult.finalTax)}</span></div>
+            <div class="kpi"><span class="label">Net Income</span><span class="value">${fmt(lastResult.netIncome)}</span></div>
+            <div class="kpi"><span class="label">Effective Tax Rate</span><span class="value">${lastResult.effectiveRate.toFixed(1)}%</span></div>
+            <div class="kpi"><span class="label">Marginal Tax Rate</span><span class="value">${(lastResult.marginalRate * 100).toFixed(0)}%</span></div>
+        </div>
+
+        <h2 class="section-title">Tax Bracket Breakdown</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Bracket Range</th>
+                    <th>Rate</th>
+                    <th style="text-align:right;">Taxable in Bracket</th>
+                    <th style="text-align:right;">Tax Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${breakdownRows || '<tr><td colspan="4" style="text-align:center;">No taxable amount in brackets</td></tr>'}
+            </tbody>
+        </table>
+
+        <h2 class="section-title">Detailed Figures</h2>
+        <table>
+            <tbody>
+                <tr><th>Total Deductions</th><td style="text-align:right;">${fmt(lastResult.totalDeductions)}</td></tr>
+                <tr><th>Total Credits</th><td style="text-align:right;">${fmt(lastResult.totalCredits)}</td></tr>
+                <tr><th>Deduction Savings (Estimated)</th><td style="text-align:right;">${fmt(lastResult.deductionSavings)}</td></tr>
+                <tr><th>Monthly Take-Home</th><td style="text-align:right;">${fmt(monthly(lastResult.netIncome))}</td></tr>
+            </tbody>
+        </table>
+
+        <div class="note">
+            This estimate is for informational purposes only and does not constitute tax advice.
+            Federal-only estimates are shown; actual tax may vary based on additional rules and local/state regulations.
+        </div>
+    </div>
+</body>
+</html>`;
+
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+        win.focus();
+        showToast('Professional PDF view ready. Select Save as PDF');
+        setTimeout(() => win.print(), 350);
     }
 
     // ============================
